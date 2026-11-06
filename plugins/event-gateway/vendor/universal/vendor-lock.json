@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "source": "obs-tiktok-widgets/web/universal",
+  "note": "Subset of the Universal Widget SDK needed by the OBS bridge. Same pins as TikTools src/universal/vendor-lock.json.",
+  "sha256": {
+    "native.rs": "1acbe9fd5ef632ae8a923d7c13736376191063338fc0df609bb8ba388069e7f1",
+    "LICENSE": "2c64164e7d74d99e14c73faa310a65175c06623b9fc4e2717b534693cb619dc6",
+    "schemas/event.schema.json": "bda5dbf7156994871ef1baff43c4a4bdd24dec856c37e4cd6d7f742bf23af1e1",
+    "schemas/payloads.schema.json": "b32a324f3f98af1635157db540701790977ea0360cf1af06eae59e219c780c43",
+    "schemas/mappings.schema.json": "0ba2dfcd4e55b5b9a7963b3ca92d26fed5a9ecf1f131bb25e5a1b94de73e0357",
+    "fixtures/custom.alert.json": "ba4594781ef88517b537891d8b503c382a53c03f378a64dc171f8cc08185c30e",
+    "fixtures/conformance.json": "d79931d2d6b64c53ca42734154a383e4fe7b4500522b1d294432a0afea4034bd"
+  }
+}

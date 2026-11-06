@@ -1,36 +1,67 @@
 /**
- * Host/plugin interop: the REAL `PluginWebviewHost` from `src/web` (bundled
- * at test time, never imported by the plugin) drives the REAL compiled
- * plugin UI inside a sandboxed iframe over `postMessage`. This pins the
- * versioned broker envelope on both sides at once — a drift on either
- * side fails here, not in production.
+ * Host/plugin interop: the REAL `PluginWebviewHost` from a TikTools checkout
+ * (bundled at test time, never imported by the plugin) drives the REAL
+ * compiled plugin UI inside a sandboxed iframe over `postMessage`. This pins
+ * the versioned broker envelope on both sides at once.
+ *
+ * The host shim comes from `TIKTOOLS_APP_DIR`, or a sibling `TikTools-app`
+ * checkout. Without one the suite is skipped: the plugin stays buildable and
+ * testable on its own.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync } from 'node:fs';
+import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { expect, test, type Page } from '@playwright/test';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+const SHIM = 'src/web/entities/plugin/api/plugin-webview-host.ts';
+
+function hostShim(): string | null {
+  const candidates = [
+    process.env.TIKTOOLS_APP_DIR,
+    resolve(repoRoot, '..', 'TikTools-app'),
+    resolve(repoRoot, '..', 'Tiktok-Live-APPv3'),
+  ].filter((value): value is string => Boolean(value));
+  for (const candidate of candidates) {
+    const shim = join(candidate, SHIM);
+    if (existsSync(shim)) return shim;
+  }
+  return null;
+}
+
+/** Structural type of the host shim surface this suite drives. */
+interface ShimModule {
+  PluginWebviewHost: new (
+    frame: Window | null,
+    options: {
+      pluginId: string;
+      backend: unknown;
+      postToFrame: (envelope: unknown) => void;
+    },
+  ) => { handleFrameMessage: (data: unknown, source: MessageEventSource | null) => Promise<void> };
+}
+
+const shimSource = hostShim();
+test.skip(shimSource === null, 'needs a TikTools checkout (set TIKTOOLS_APP_DIR)');
 
 let shimPath: string;
 
 test.beforeAll(() => {
-  // Bundle the real host shim for the browser through the harness entry
-  // (which assigns the global). The shim is dependency-free.
+  // Bundle the real host shim for the browser through a generated entry
+  // that assigns the global. The shim is dependency-free.
   const dir = mkdtempSync(join(tmpdir(), 'tiktools-shim-'));
+  const entry = join(dir, 'entry.ts');
+  writeFileSync(
+    entry,
+    `import * as shim from ${JSON.stringify(shimSource)};\n(window as unknown as { TikToolsShim: typeof shim }).TikToolsShim = shim;\n`,
+  );
   shimPath = join(dir, 'shim.js');
   execFileSync(
     'bun',
-    [
-      'build',
-      'plugins/sonicboom/ui/tests/harness-entry.ts',
-      '--format=iife',
-      '--define=import.meta.env={}',
-      `--outfile=${shimPath}`,
-    ],
+    ['build', entry, '--format=iife', '--define=import.meta.env={}', `--outfile=${shimPath}`],
     { cwd: repoRoot, stdio: 'pipe' },
   );
 });
@@ -115,7 +146,7 @@ async function installHarness(page: Page, uiUrl: string): Promise<string[]> {
     frame.setAttribute('sandbox', 'allow-scripts');
     frame.src = frameSrc;
     document.getElementById('mount')?.appendChild(frame);
-    const shim = (window as unknown as { TikToolsShim: typeof import('../../../../src/web/entities/plugin/api/plugin-webview-host.ts') }).TikToolsShim;
+    const shim = (window as unknown as { TikToolsShim: ShimModule }).TikToolsShim;
     const host = new shim.PluginWebviewHost(frame.contentWindow, {
       pluginId: 'sonicboom.server',
       backend,

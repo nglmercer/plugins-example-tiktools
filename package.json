@@ -1,0 +1,27 @@
+{
+  "name": "plugins-example-tiktools",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.4",
+  "scripts": {
+    "check": "bun scripts/check.ts",
+    "test": "bun test plugins/sonicboom/shared plugins/sonicboom/ui/src plugins/hotkeys/tests",
+    "typecheck": "vue-tsc --noEmit -p plugins/sonicboom/ui/tsconfig.json && tsc --noEmit -p plugins/hotkeys/tsconfig.json",
+    "build:sonicboom-ui": "vite build --config plugins/sonicboom/ui/vite.config.ts",
+    "build:hotkeys": "tsc -p plugins/hotkeys/tsconfig.json",
+    "e2e:sonicboom": "playwright test --config plugins/sonicboom/ui/playwright.config.ts",
+    "sync-sdk": "bun scripts/sync-sdk.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tiktools/plugin-ui": "file:./vendor/tiktools-plugin-ui",
+    "@types/bun": "1.4.4",
+    "@types/node": "^26.6.6",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vitejs/plugin-vue-jsx": "^5.1.6",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.5",
+    "vue": "^3.5.44",
+    "vue-tsc": "^3.3.13"
+  }
+}

@@ -12,7 +12,7 @@ use tiktools_plugin_sdk::DomainEventEnvelope;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::mpsc;
-#[path = "../../../../src/universal/native.rs"]
+#[path = "../../vendor/universal/native.rs"]
 mod contracts;
 
 #[derive(Clone, Debug)]

@@ -1,0 +1,8 @@
+target/
+node_modules/
+.dev-plugins/
+plugins/sonicboom/backend/dist/
+test-results/
+playwright-report/
+dist/plugins/
+plugins/event-gateway/dist/

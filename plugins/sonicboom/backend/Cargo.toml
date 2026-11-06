@@ -11,7 +11,7 @@ path = "src/main.rs"
 
 [dependencies]
 serde_json.workspace = true
-tiktools-plugin-sdk = { path = "../../../crates/tiktools-plugin-sdk" }
+tiktools-plugin-sdk.workspace = true
 reqwest.workspace = true
 tokio.workspace = true
 unicode-segmentation.workspace = true

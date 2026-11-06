@@ -1,0 +1,23 @@
+[workspace]
+# Every Rust plugin builds against the public TikTools plugin SDK pinned below,
+# never against host internals. To develop against a local TikTools checkout,
+# see README.md ("Developing against a local TikTools checkout").
+members = [
+    "plugins/audio-process",
+    "plugins/event-gateway",
+    "plugins/sonicboom/backend",
+    "plugins/textintel",
+]
+resolver = "2"
+
+[workspace.dependencies]
+tiktools-plugin-sdk = { git = "https://github.com/nglmercer/TikTools-app", rev = "125193d97eb54867a4426b47603593b2293fd989" }
+tiktools-plugin-api = { git = "https://github.com/nglmercer/TikTools-app", rev = "125193d97eb54867a4426b47603593b2293fd989" }
+serde_json = "1.0.154"
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls"] }
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "sync", "macros", "time", "net", "io-util", "io-std", "fs"] }
+unicode-segmentation = "1.13.3"
+
+[profile.release]
+lto = true
+codegen-units = 1

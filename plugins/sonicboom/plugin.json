@@ -37,6 +37,7 @@
     "health": {
       "path": "/api/info",
       "strategy": "sonicboom",
+      "authProbePath": "/api/tts/plugin/providers",
       "timeoutMs": 5000
     },
     "tokenProvisioning": {
