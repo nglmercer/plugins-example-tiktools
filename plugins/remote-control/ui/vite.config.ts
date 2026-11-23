@@ -20,6 +20,15 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: false,
     chunkSizeWarningLimit: 500,
+    // Stable names: the generated index.html can be committed and the host
+    // resolves assets by path, so a rebuild must not change filenames.
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/index.js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name][extname]',
+      },
+    },
   },
   // The sandboxed web host mounts this UI at an opaque origin, so the
   // preview server answers cross-origin like every real plugin-asset host
