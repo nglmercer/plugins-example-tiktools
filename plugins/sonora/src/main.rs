@@ -101,7 +101,12 @@ fn request_for(action_type: &str, config: &Map<String, Value>) -> PluginResult<V
             let item = json!({ "search": { "text": text, "kind": kind } });
             let queue = match action_type {
                 "sonora.search-play" => json!({ "play": [item] }),
-                _ => json!({ "add": [item] }),
+                _ => match optional_position(config)? {
+                    Some(position) => {
+                        json!({ "at": { "items": [item], "position": position } })
+                    }
+                    None => json!({ "add": [item] }),
+                },
             };
             Ok(json!({ "queue": queue }))
         }
@@ -139,6 +144,41 @@ fn required_choice(
         )));
     }
     Ok(value.to_owned())
+}
+
+/// An optional 1-based queue position. The manifest field is a number, but a process plugin sees
+/// the raw config, so an empty string or a string number has to be read too. `None` leaves Sonora
+/// to add the item after the tracks queued by hand.
+fn optional_position(config: &Map<String, Value>) -> PluginResult<Option<usize>> {
+    let Some(value) = config.get("position") else {
+        return Ok(None);
+    };
+    let at = match value {
+        Value::Null => return Ok(None),
+        Value::Number(number) => usize::try_from(
+            number
+                .as_u64()
+                .ok_or_else(|| PluginError::invalid_request("position must be a whole number"))?,
+        )
+        .map_err(|_| PluginError::invalid_request("position is too large"))?,
+        Value::String(text) => {
+            let text = text.trim();
+            if text.is_empty() {
+                return Ok(None);
+            }
+            text.parse()
+                .map_err(|_| PluginError::invalid_request("position must be a whole number"))?
+        }
+        _ => {
+            return Err(PluginError::invalid_request(
+                "position must be a whole number",
+            ));
+        }
+    };
+    match at {
+        0 => Err(PluginError::invalid_request("position must be at least 1")),
+        _ => Ok(Some(at)),
+    }
 }
 
 /// Maximum length of a rendered template, matching the host's own template
@@ -425,9 +465,9 @@ fn exchange<S: Read + Write>(mut stream: S, request: &[u8]) -> PluginResult<Opti
 
     let mut reader = BufReader::new(stream.take(MAX_REPLY_BYTES as u64 + 1));
     let mut line = Vec::new();
-    reader.read_until(b'\n', &mut line).map_err(|error| {
-        PluginError::other(format!("Could not read Sonora's reply: {error}"))
-    })?;
+    reader
+        .read_until(b'\n', &mut line)
+        .map_err(|error| PluginError::other(format!("Could not read Sonora's reply: {error}")))?;
     if line.len() > MAX_REPLY_BYTES {
         return Err(PluginError::other("Sonora's reply is too large"));
     }
@@ -572,6 +612,35 @@ mod tests {
         .unwrap();
         assert_eq!(
             body,
+            json!({"queue": {"add": [{"search": {"text": "daft punk", "kind": "song"}}]}})
+        );
+    }
+
+    #[test]
+    fn search_add_with_a_position_maps_to_a_queue_at_request() {
+        for (value, position) in [(Value::from(3), 3), (Value::from("2"), 2)] {
+            let mut config = config(&[("text", "daft punk"), ("kind", "song")]);
+            config.insert("position".to_owned(), value);
+            assert_eq!(
+                request_for("sonora.search-add", &config).unwrap(),
+                json!({"queue": {"at": {"items": [
+                    {"search": {"text": "daft punk", "kind": "song"}}
+                ], "position": position}}})
+            );
+        }
+    }
+
+    #[test]
+    fn search_add_rejects_an_invalid_position() {
+        for value in [Value::from(0), Value::from("zero")] {
+            let mut config = config(&[("text", "daft punk"), ("kind", "song")]);
+            config.insert("position".to_owned(), value);
+            assert!(request_for("sonora.search-add", &config).is_err());
+        }
+        let mut config = config(&[("text", "daft punk"), ("kind", "song")]);
+        config.insert("position".to_owned(), Value::String(String::new()));
+        assert_eq!(
+            request_for("sonora.search-add", &config).unwrap(),
             json!({"queue": {"add": [{"search": {"text": "daft punk", "kind": "song"}}]}})
         );
     }

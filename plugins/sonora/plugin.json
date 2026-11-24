@@ -121,6 +121,14 @@
             { "value": "artist", "label": { "default": "Artist" } },
             { "value": "playlist", "label": { "default": "Playlist" } }
           ]
+        },
+        {
+          "key": "position",
+          "label": { "default": "Queue position" },
+          "kind": "number",
+          "value": "",
+          "min": 1,
+          "hint": { "default": "1 plays next, 2 leaves one upcoming track ahead. Leave empty to add after the tracks queued by hand." }
         }
       ]
     },
