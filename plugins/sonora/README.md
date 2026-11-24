@@ -10,6 +10,7 @@ changes and no additional TikTools capability are required.
 | Action id | Action | Arguments | Sonora request |
 | --- | --- | --- | --- |
 | `sonora.search-play` | Sonora: Search and play | `text`, `stripPrefix` (optional), `kind` (`song` / `album` / `artist` / `playlist`) | `{"queue":{"play":[{"search":{...}}]}}` |
+| `sonora.search-add` | Sonora: Search and add to queue | `text`, `stripPrefix` (optional), `kind` (`song` / `album` / `artist` / `playlist`) | `{"queue":{"add":[{"search":{...}}]}}` |
 | `sonora.play` | Sonora: Play | — | `{"playback":"play"}` |
 | `sonora.pause` | Sonora: Pause | — | `{"playback":"pause"}` |
 | `sonora.next` | Sonora: Next track | — | `{"playback":"next"}` |
@@ -25,7 +26,7 @@ itself (otherwise a track literally named `!play` could be played). Set the
 optional `stripPrefix` field to override this — any string is accepted, e.g.
 `play`, `!p` or `song:` — and only that exact prefix will be removed.
 
-Only these five actions are shipped. The wider WebDeck reference integration
+Only these six actions are shipped. The wider WebDeck reference integration
 also exposes queue/lyrics/provider reads, seek, volume, mute, shuffle, repeat,
 like, provider switching and link queueing; they are intentionally omitted
 here.

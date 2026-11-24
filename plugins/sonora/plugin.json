@@ -11,8 +11,8 @@
   "engines": { "tiktools": ">=0.3.3, <5.0.0" },
   "categories": ["music", "integrations"],
   "repository": "https://github.com/nglmercer/plugins-example-tiktools",
-  "description": "Control a running Sonora music player through its local control socket: search and play, play, pause, next and previous.",
-  "longDescription": "Control a running Sonora music player through the same local control socket its own CLI uses (protocol 2, JSON lines over a Unix socket on Linux and macOS, a named pipe on Windows).\n\n- **Search and play** resolves a song, album, artist or playlist and plays the best match\n- **Play / Pause / Next / Previous** send one playback command each\n- No host capability is required: the plugin talks to Sonora directly, on Linux, macOS and Windows\n- Start Sonora before running an action; if the socket is missing the action reports that Sonora is not running",
+  "description": "Control a running Sonora music player through its local control socket: search and play, search and queue, play, pause, next and previous.",
+  "longDescription": "Control a running Sonora music player through the same local control socket its own CLI uses (protocol 2, JSON lines over a Unix socket on Linux and macOS, a named pipe on Windows).\n\n- **Search and play** resolves a song, album, artist or playlist and plays the best match\n- **Search and queue** resolves the best match and adds it to the queue after the tracks queued by hand\n- **Play / Pause / Next / Previous** send one playback command each\n- No host capability is required: the plugin talks to Sonora directly, on Linux, macOS and Windows\n- Start Sonora before running an action; if the socket is missing the action reports that Sonora is not running",
   "icon": "music",
   "tags": ["sonora", "music", "player", "audio"],
   "runtime": "process",
@@ -47,6 +47,47 @@
       "version": 1,
       "title": { "default": "Sonora: Search and play" },
       "description": { "default": "Search Sonora and play the best matching song, album, artist or playlist." },
+      "tag": "sonora",
+      "icon": "music",
+      "category": "Sonora",
+      "requiredCapabilities": ["sonora.control"],
+      "fields": [
+        {
+          "key": "text",
+          "label": { "default": "Search text" },
+          "kind": "text",
+          "value": "",
+          "template": true,
+          "placeholder": "Daft Punk",
+          "hint": { "default": "What to look for in Sonora. Event placeholders such as {{ event.data.comment }} are supported." }
+        },
+        {
+          "key": "stripPrefix",
+          "label": { "default": "Strip command prefix" },
+          "kind": "text",
+          "value": "",
+          "placeholder": "!play",
+          "hint": { "default": "Removed from the rendered search text, so a comment like `!play Daft Punk` searches for `Daft Punk` instead of the command." }
+        },
+        {
+          "key": "kind",
+          "label": { "default": "Search in" },
+          "kind": "select",
+          "value": "song",
+          "options": [
+            { "value": "song", "label": { "default": "Song" } },
+            { "value": "album", "label": { "default": "Album" } },
+            { "value": "artist", "label": { "default": "Artist" } },
+            { "value": "playlist", "label": { "default": "Playlist" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sonora.search-add",
+      "version": 1,
+      "title": { "default": "Sonora: Search and add to queue" },
+      "description": { "default": "Search Sonora and add the best matching song, album, artist or playlist to the queue." },
       "tag": "sonora",
       "icon": "music",
       "category": "Sonora",

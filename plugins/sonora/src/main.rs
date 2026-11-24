@@ -13,6 +13,7 @@
 //! action maps to a single request, and the plugin is deliberately small:
 //!
 //! - `sonora.search-play` -> `{"queue":{"play":[{"search":{...}}]}}`
+//! - `sonora.search-add` -> `{"queue":{"add":[{"search":{...}}]}}`
 //! - `sonora.play` / `pause` / `next` / `previous` -> `{"playback":"..."}`
 //!
 //! Everything else in the WebDeck reference plugin (lyrics, volume, seek,
@@ -77,6 +78,7 @@ impl Plugin for SonoraPlugin {
 fn summary_for(action_type: &str) -> String {
     match action_type {
         "sonora.search-play" => "Sonora: searching and playing the best match".into(),
+        "sonora.search-add" => "Sonora: searching and adding the best match to the queue".into(),
         "sonora.play" => "Sonora: playback resumed".into(),
         "sonora.pause" => "Sonora: playback paused".into(),
         "sonora.next" => "Sonora: skipped to the next track".into(),
@@ -93,14 +95,15 @@ fn request_for(action_type: &str, config: &Map<String, Value>) -> PluginResult<V
         "sonora.pause" => Ok(json!({"playback": "pause"})),
         "sonora.next" => Ok(json!({"playback": "next"})),
         "sonora.previous" => Ok(json!({"playback": "previous"})),
-        "sonora.search-play" => {
+        "sonora.search-play" | "sonora.search-add" => {
             let text = required_text(config, "text")?;
             let kind = required_choice(config, "kind", &KINDS)?;
-            Ok(json!({
-                "queue": {
-                    "play": [{ "search": { "text": text, "kind": kind } }]
-                }
-            }))
+            let item = json!({ "search": { "text": text, "kind": kind } });
+            let queue = match action_type {
+                "sonora.search-play" => json!({ "play": [item] }),
+                _ => json!({ "add": [item] }),
+            };
+            Ok(json!({ "queue": queue }))
         }
         other => Err(PluginError::unsupported(other)),
     }
@@ -561,6 +564,19 @@ mod tests {
     }
 
     #[test]
+    fn search_add_maps_to_a_queue_add_request() {
+        let body = request_for(
+            "sonora.search-add",
+            &config(&[("text", "daft punk"), ("kind", "song")]),
+        )
+        .unwrap();
+        assert_eq!(
+            body,
+            json!({"queue": {"add": [{"search": {"text": "daft punk", "kind": "song"}}]}})
+        );
+    }
+
+    #[test]
     fn search_play_renders_event_placeholders_before_building_the_request() {
         let mut config = Value::Object(config(&[
             ("text", "{{ event.data.comment }} "),
@@ -638,18 +654,12 @@ mod tests {
     }
 
     #[test]
-    fn search_play_validates_text_and_kind() {
-        assert!(request_for("sonora.search-play", &config(&[("kind", "song")])).is_err());
-        assert!(request_for(
-            "sonora.search-play",
-            &config(&[("text", "x"), ("kind", "movie")])
-        )
-        .is_err());
-        assert!(request_for(
-            "sonora.search-play",
-            &config(&[("text", "   "), ("kind", "song")])
-        )
-        .is_err());
+    fn search_actions_validate_text_and_kind() {
+        for action in ["sonora.search-play", "sonora.search-add"] {
+            assert!(request_for(action, &config(&[("kind", "song")])).is_err());
+            assert!(request_for(action, &config(&[("text", "x"), ("kind", "movie")])).is_err());
+            assert!(request_for(action, &config(&[("text", "   "), ("kind", "song")])).is_err());
+        }
     }
 
     #[test]
