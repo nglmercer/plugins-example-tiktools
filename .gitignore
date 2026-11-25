@@ -6,3 +6,7 @@ test-results/
 playwright-report/
 dist/plugins/
 plugins/event-gateway/dist/
+
+# Built plugin WebViews — the TikTools packaging pipeline rebuilds them on
+# every release (scripts/lib/plugin-build.ts), so committing them only churns.
+plugins/*/ui/dist/
