@@ -67,7 +67,7 @@
             "default": "Text",
             "i18key": "sonicboom.server.speak.text.label"
           },
-          "kind": "textarea",
+          "kind": "text",
           "value": "{{ event.data.comment }}",
           "template": true,
           "placeholder": "{{ event.data.comment }}",
@@ -173,6 +173,9 @@
       "optionSources": {
         "voice": {
           "path": "/api/tts/plugin/voices",
+          "params": {
+            "provider": "{{ config.provider }}"
+          },
           "timeoutMs": 8000
         },
         "provider": {
