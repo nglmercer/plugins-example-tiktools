@@ -10,7 +10,7 @@ changes and no additional TikTools capability are required.
 | Action id | Action | Arguments | Sonora request |
 | --- | --- | --- | --- |
 | `sonora.search-play` | Sonora: Search and play | `text`, `stripPrefix` (optional), `kind` (`song` / `album` / `artist` / `playlist`) | `{"queue":{"play":[{"search":{...}}]}}` |
-| `sonora.search-add` | Sonora: Search and add to queue | `text`, `stripPrefix` (optional), `kind` (`song` / `album` / `artist` / `playlist`) | `{"queue":{"add":[{"search":{...}}]}}` |
+| `sonora.search-add` | Sonora: Search and add to queue | `text`, `stripPrefix` (optional), `kind` (`song` / `album` / `artist` / `playlist`), `position` (optional) | `{"queue":{"add":[{"search":{...}}]}}` or `{"queue":{"at":{"items":[...],"position":N}}}` |
 | `sonora.play` | Sonora: Play | — | `{"playback":"play"}` |
 | `sonora.pause` | Sonora: Pause | — | `{"playback":"pause"}` |
 | `sonora.next` | Sonora: Next track | — | `{"playback":"next"}` |
@@ -25,6 +25,10 @@ and `!number 42` all search for the text after the command, not for the command
 itself (otherwise a track literally named `!play` could be played). Set the
 optional `stripPrefix` field to override this — any string is accepted, e.g.
 `play`, `!p` or `song:` — and only that exact prefix will be removed.
+
+`position` is a 1-based queue position: `1` puts the hit right after the playing
+track, `2` leaves one upcoming track ahead, and so on. Leave it empty to add the
+hit after the tracks queued by hand. To play the hit now, use `sonora.search-play`.
 
 Only these six actions are shipped. The wider WebDeck reference integration
 also exposes queue/lyrics/provider reads, seek, volume, mute, shuffle, repeat,
