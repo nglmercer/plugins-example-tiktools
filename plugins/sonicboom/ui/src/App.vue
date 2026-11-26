@@ -134,7 +134,11 @@ export const SonicBoomApp = defineVueComponent<Record<string, never>>([], () => 
     if (providerChanged) {
       if (saveTimer !== undefined) { clearTimeout(saveTimer); saveTimer = undefined; }
       settings.value.voiceCatalogRevision = crypto.randomUUID();
-      void persistSettings().catch(() => undefined);
+      // The voice source is contextual: reload it with the new provider
+      // instead of filtering a catalog fetched for the previous one.
+      void persistSettings()
+        .then(() => { void loadCatalog(false); })
+        .catch(() => undefined);
     } else schedulePersist();
   };
 
@@ -165,7 +169,8 @@ export const SonicBoomApp = defineVueComponent<Record<string, never>>([], () => 
         await persistSettings();
       }
       const [providerResult, voiceResult] = await Promise.allSettled([
-        broker.getOptions(PROVIDERS_SOURCE, refresh), broker.getOptions(VOICES_SOURCE, refresh),
+        broker.getOptions(PROVIDERS_SOURCE, refresh),
+        broker.getOptions(VOICES_SOURCE, refresh, { provider: settings.value.providerId }),
       ]);
       if (epoch !== catalogEpoch) return;
       const connected = await broker.getSettings();
